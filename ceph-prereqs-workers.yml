@@ -11,15 +11,31 @@
           - chrony
           - gdisk
           - curl
+          - docker.io
         state: present
         update_cache: yes
 
+    - name: Enable and start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
     - name: Ensure /dev/sdb is not mounted
-      command: umount /dev/sdb
+      shell: umount /dev/sdb* || true
       ignore_errors: yes
 
     - name: Zap /dev/sdb using sgdisk
       command: sgdisk --zap-all /dev/sdb
+      ignore_errors: yes
+
+    - name: Wipe filesystem signatures from /dev/sdb
+      command: wipefs -a /dev/sdb
+      ignore_errors: yes
+
+    - name: Overwrite beginning of /dev/sdb with zeros
+      command: dd if=/dev/zero of=/dev/sdb bs=1M count=100
+      ignore_errors: yes
 
     - name: Ensure chronyd is running and enabled
       service:
