@@ -111,12 +111,4 @@ mode = parts[1] if len(parts) > 1 else 'UNKNOWN'
 
 ---
 
-## ✅ What’s Next?
-
-- Optional: add Kubernetes/Rook integration
-- Automate dashboard user/password setup
-- Add backup/monitoring integrations
-
----
-
 > Ideal for homelabs, POCs, learning Ceph orchestration, or reproducible lightweight deployments.
