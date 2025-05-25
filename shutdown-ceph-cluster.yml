@@ -1,0 +1,32 @@
+---
+- name: Set Ceph safe shutdown flags
+  hosts: master
+  become: true
+  tasks:
+    - name: Set Ceph flags to prevent recovery/rebalancing
+      shell: |
+        ceph osd set noout
+        ceph osd set norebalance
+        ceph osd set norecover
+      register: ceph_flags
+      changed_when: false
+
+    - name: Stop Ceph daemons via cephadm
+      shell: |
+        ceph orch stop osd
+        ceph orch stop mon
+        ceph orch stop mgr
+      register: ceph_stop
+      changed_when: false
+
+    - name: Pause briefly before shutdown
+      pause:
+        seconds: 10
+
+- name: Shutdown all nodes
+  hosts: all
+  become: true
+  tasks:
+    - name: Shutdown system now
+      command: shutdown -h now
+      ignore_errors: true  # SSH will drop before task completes
