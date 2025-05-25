@@ -1,0 +1,18 @@
+---
+- name: Add Ceph node hostnames to /etc/hosts
+  hosts: all
+  become: yes
+  vars:
+    ceph_hosts: |
+      {% for host in groups['all'] %}
+      {{ hostvars[host]['ansible_host'] }} {{ host }}
+      {% endfor %}
+  tasks:
+    - name: Add each host entry if not already present
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ item }}"
+        state: present
+        create: yes
+        regexp: "^{{ item.split(' ')[0] }}\\s+{{ item.split(' ')[1] }}"
+      loop: "{{ ceph_hosts.split('\n') | select('match', '^[0-9]') | list }}"

@@ -1,4 +1,5 @@
 ---
+- import_playbook: ceph-add-names.yml
 - import_playbook: ceph-bootstrap-master.yml
 - import_playbook: ceph-prereqs-workers.yml
 - import_playbook: add-ssh-keys.yml
