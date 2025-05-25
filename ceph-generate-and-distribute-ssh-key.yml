@@ -1,0 +1,30 @@
+---
+- name: Add Ceph Orchestrator SSH key to workers
+  hosts: workers
+  become: yes
+  vars_files:
+    - vars/ceph_bootstrap.yml
+
+  tasks:
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: "/home/{{ ceph_ssh_user }}/.ssh"
+        state: directory
+        owner: "{{ ceph_ssh_user }}"
+        group: "{{ ceph_ssh_user }}"
+        mode: '0700'
+
+    - name: Add Ceph Orchestrator public key
+      authorized_key:
+        user: "{{ ceph_ssh_user }}"
+        key: "{{ ceph_pubkey }}"
+        state: present
+        exclusive: no
+
+    - name: Ensure authorized_keys has correct permissions
+      file:
+        path: "/home/{{ ceph_ssh_user }}/.ssh/authorized_keys"
+        mode: '0600'
+        owner: "{{ ceph_ssh_user }}"
+        group: "{{ ceph_ssh_user }}"

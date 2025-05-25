@@ -1,0 +1,30 @@
+---
+- name: Add Node-Master SSH key to worker nodes
+  hosts: workers
+  become: yes
+  vars_files:
+    - vars/ceph_bootstrap.yml
+
+  tasks:
+
+    - name: Ensure .ssh directory exists for {{ ceph_ssh_user }}
+      file:
+        path: "/home/{{ ceph_ssh_user }}/.ssh"
+        state: directory
+        owner: "{{ ceph_ssh_user }}"
+        group: "{{ ceph_ssh_user }}"
+        mode: '0700'
+
+    - name: Add Node-Master public key to authorized_keys
+      authorized_key:
+        user: "{{ ceph_ssh_user }}"
+        key: "{{ node_master_ssh_key }}"
+        state: present
+        exclusive: no
+
+    - name: Ensure authorized_keys permissions
+      file:
+        path: "/home/{{ ceph_ssh_user }}/.ssh/authorized_keys"
+        owner: "{{ ceph_ssh_user }}"
+        group: "{{ ceph_ssh_user }}"
+        mode: '0600'

@@ -1,0 +1,10 @@
+---
+- name: Add Ceph OSD hosts (worker nodes) to the cluster
+  hosts: master
+  become: yes
+
+  tasks:
+    - name: Add each worker node to the Ceph orchestrator
+      command: >
+        cephadm shell -- ceph orch host add {{ item }} {{ hostvars[item]['ansible_host'] }}
+      loop: "{{ groups['workers'] }}"

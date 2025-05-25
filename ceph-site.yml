@@ -1,0 +1,7 @@
+---
+- import_playbook: ceph-prereqs.yml
+- import_playbook: ceph-install-docker.yml
+- import_playbook: ceph-bootstrap.yml
+- import_playbook: ceph-generate-and-distribute-ssh-key.yml
+- import_playbook: ceph-add-hosts.yml
+- import_playbook: ceph-add-osds.yml

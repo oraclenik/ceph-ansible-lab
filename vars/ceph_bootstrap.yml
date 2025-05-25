@@ -1,0 +1,9 @@
+# Ceph Orchestrator bootstrap settings
+ceph_dashboard_user: admin
+ceph_dashboard_password: admin
+ceph_cluster_network: 192.168.1.0/24
+ceph_ssh_user: ubuntu
+
+# SSH keys
+node_master_ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1...........xPxOAgDduzM9L ubuntu@Node-Master"
+ceph_pubkey: "ssh-rsa AAAAB3NzaC1yc2E............9nMc5cH3zTP7/UhC+VWLpi5M+s= ceph-6005ddb3-1234-1234-1234-000c292ff86b"

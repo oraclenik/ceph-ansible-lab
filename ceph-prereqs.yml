@@ -1,0 +1,28 @@
+---
+- name: Prepare worker nodes for Ceph installation
+  hosts: workers
+  become: yes
+  tasks:
+
+    - name: Install dependencies
+      apt:
+        name:
+          - lvm2
+          - chrony
+          - gdisk
+          - curl
+        state: present
+        update_cache: yes
+
+    - name: Ensure /dev/sdb is not mounted
+      command: umount /dev/sdb
+      ignore_errors: yes
+
+    - name: Zap /dev/sdb using sgdisk
+      command: sgdisk --zap-all /dev/sdb
+
+    - name: Ensure chronyd is running and enabled
+      service:
+        name: chrony
+        state: started
+        enabled: yes

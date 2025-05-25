@@ -1,0 +1,10 @@
+---
+- name: Deploy Ceph OSDs on worker nodes using /dev/sdb
+  hosts: master
+  become: yes
+
+  tasks:
+    - name: Deploy OSD on /dev/sdb for each worker node
+      command: >
+        cephadm shell -- ceph orch daemon add osd {{ item }}:/dev/sdb
+      loop: "{{ groups['workers'] }}"

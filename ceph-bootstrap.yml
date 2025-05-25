@@ -1,0 +1,37 @@
+---
+- name: Install cephadm manually and bootstrap Ceph
+  hosts: master
+  become: yes
+  vars_files:
+    - vars/ceph_bootstrap.yml
+
+  tasks:
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Enable and start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copy local patched cephadm script to master node
+      copy:
+        src: ./cephadm
+        dest: /usr/local/bin/cephadm
+        mode: '0755'
+
+    - name: Bootstrap Ceph cluster using cephadm
+      command: >
+        cephadm bootstrap
+        --mon-ip {{ ansible_host }}
+        --initial-dashboard-user {{ ceph_dashboard_user }}
+        --initial-dashboard-password {{ ceph_dashboard_password }}
+        --cluster-network {{ ceph_cluster_network }}
+        --ssh-user {{ ceph_ssh_user }}
+      args:
+        creates: /etc/ceph/ceph.conf
