@@ -110,5 +110,6 @@ mode = parts[1] if len(parts) > 1 else 'UNKNOWN'
 ✅ **Note**: This repo includes a patched `cephadm` script **only as an example**. You should always patch and verify your version manually against the upstream Ceph release.
 
 ---
+![image](https://github.com/user-attachments/assets/d6ff05ef-25c4-41e4-bec2-c2af2febced9)
 
 > Ideal for homelabs, POCs, learning Ceph orchestration, or reproducible lightweight deployments.
