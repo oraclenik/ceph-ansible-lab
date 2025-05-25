@@ -1,6 +1,6 @@
 # Ceph Cluster Installation with Ansible (Ubuntu 24.04 + KVM/VMware)
 
-This repository contains Ansible playbooks to **provision a Ceph storage cluster** using lightweight VMs running Ubuntu 24.04. The cluster consists of 1 master node and 3 worker nodes. Ceph is installed using `cephadm`, OSDs are provisioned from `/dev/sdb`, and SSH + Docker + networking is handled end-to-end with Ansible.
+This repository contains Ansible playbooks to **automate deployment of a Ceph storage cluster** using lightweight Ubuntu 24.04 VMs. It includes Ceph bootstrapping, OSD provisioning, SSH access setup, and container runtime installation — all driven by a single master playbook.
 
 ---
 
@@ -8,37 +8,36 @@ This repository contains Ansible playbooks to **provision a Ceph storage cluster
 
 ```ini
 [master]
-node-master ansible_host=192.168.1.100
+node-master ansible_host=192.168.178.73
 
 [workers]
-node-01 ansible_host=192.168.1.101
-node-02 ansible_host=192.168.1.102
-node-03 ansible_host=192.168.1.103
+node-01 ansible_host=192.168.178.74
+node-02 ansible_host=192.168.178.75
+node-03 ansible_host=192.168.178.76
 
 [all:vars]
 ansible_user=ubuntu
-ansible_ssh_private_key_file=/home/user/.ssh/id_rsa
+ansible_ssh_private_key_file=/home/oracle/.ssh/id_rsa
 ansible_python_interpreter=/usr/bin/python3
 ```
 
 ---
 
-## ⚙️ Playbooks Overview
+## 📦 Playbooks Overview
 
-| File                                 | Purpose                                                             |
-|--------------------------------------|----------------------------------------------------------------------|
-| `ceph-site.yml`                     | **Master playbook** to run all steps in order                       |
-| `ceph-prereqs.yml`                  | Installs base packages, wipes `/dev/sdb`, ensures `chrony` running  |
-| `ceph-install-docker.yml`           | Installs Docker on all worker nodes (required for cephadm)         |
-| `ceph-bootstrap.yml`                | Bootstraps the cluster using a local patched cephadm script         |
-| `ceph-generate-and-distribute-ssh-key.yml` | Generates Ceph's SSH key and deploys it to worker nodes     |
-| `add-node-master-key.yml`           | Adds master SSH key to workers for test access                      |
-| `ceph-add-hosts.yml`                | Adds worker nodes to the Ceph orchestrator                         |
-| `ceph-add-osds.yml`                 | Provisions `/dev/sdb` as an OSD on each worker                     |
+| File                                         | Purpose                                                             |
+|----------------------------------------------|----------------------------------------------------------------------|
+| `ceph-site.yml`                              | **Master playbook** to run all steps in order                       |
+| `ceph-prereqs-workers.yml`                   | Prepares worker nodes: wipes `/dev/sdb`, installs base packages     |
+| `ceph-bootstrap-master.yml`                  | Bootstraps the cluster using a local patched `cephadm` script       |
+| `ceph-generate-and-distribute-ssh-key.yml`   | Generates Ceph’s SSH key and deploys it to worker nodes             |
+| `add-ssh-keys.yml`                           | Adds both Node-Master and Ceph Orchestrator SSH keys to workers     |
+| `ceph-add-hosts.yml`                         | Adds worker nodes to the Ceph orchestrator                          |
+| `ceph-add-osds.yml`                          | Provisions `/dev/sdb` as an OSD on each worker                      |
 
 ---
 
-## 🧱 Installation Steps
+## 🚀 Installation Steps
 
 To run the full deployment sequence, use the master playbook:
 
@@ -46,11 +45,11 @@ To run the full deployment sequence, use the master playbook:
 ansible-playbook -i hosts.ini ceph-site.yml
 ```
 
-You can also run individual playbooks manually as needed:
+Or run playbooks individually:
 
 ```bash
-ansible-playbook -i hosts.ini ceph-prereqs.yml
-ansible-playbook -i hosts.ini ceph-bootstrap.yml
+ansible-playbook -i hosts.ini ceph-bootstrap-master.yml
+ansible-playbook -i hosts.ini ceph-add-osds.yml
 # etc...
 ```
 
@@ -72,27 +71,35 @@ sudo cephadm shell -- ceph osd tree
 
 ### Dashboard
 
-Access at: `https://<master-ip>:8443`
+Access: `https://<node-master-ip>:8443`
 
-Default creds set during bootstrap:
-- Username: `admin`
-- Password: `admin`
+Default credentials:
+- **Username:** `admin`
+- **Password:** `admin` (or set in vars)
 
 ---
 
-## 🐞 Known Issues + Fixes
+## 🐞 Known Issues
 
-### ❌ AppArmor Error: `ValueError: too many values to unpack`
+### ❗ `CEPHADM_REFRESH_FAILED` or `CEPHADM_STRAY_HOST`
 
-**Fix**: Patch `/var/lib/ceph/<fsid>/cephadm.*` on **all nodes** (master + workers):
+Run:
 
-Replace:
-
-```python
-item, mode = line.split(' ')
+```bash
+sudo cephadm shell -- ceph orch host refresh --all
 ```
 
-With:
+Adopt unmanaged daemons (if needed):
+
+```bash
+sudo cephadm shell -- ceph orch adopt --name <daemon-name>
+```
+
+---
+
+### ❗ `ValueError: too many values to unpack` in cephadm
+
+This is due to AppArmor detection failing. Patch your cephadm with:
 
 ```python
 parts = line.split(' ')
@@ -100,13 +107,16 @@ item = parts[0]
 mode = parts[1] if len(parts) > 1 else 'UNKNOWN'
 ```
 
-Or disable AppArmor check:
-
-```python
-def _fetch_apparmor():
-    return []
-```
-
-> ☑️ **Note**: The `cephadm` script included in this repo is a patched version just for convenience and reference. It’s recommended to manually patch your `cephadm` from the official source to ensure you use the latest supported release and apply compatibility fixes specific to your OS/version.
+✅ **Note**: This repo includes a patched `cephadm` script **only as an example**. You should always patch and verify your version manually against the upstream Ceph release.
 
 ---
+
+## ✅ What’s Next?
+
+- Optional: add Kubernetes/Rook integration
+- Automate dashboard user/password setup
+- Add backup/monitoring integrations
+
+---
+
+> Ideal for homelabs, POCs, learning Ceph orchestration, or reproducible lightweight deployments.
