@@ -5,17 +5,17 @@
   tasks:
     - name: Set Ceph flags to prevent recovery/rebalancing
       shell: |
-        ceph osd set noout
-        ceph osd set norebalance
-        ceph osd set norecover
+        cephadm shell -- ceph osd set noout
+        cephadm shell -- ceph osd set norebalance
+        cephadm shell -- ceph osd set norecover
       register: ceph_flags
       changed_when: false
 
     - name: Stop Ceph daemons via cephadm
       shell: |
-        ceph orch stop osd
-        ceph orch stop mon
-        ceph orch stop mgr
+        cephadm shell -- ceph orch stop osd
+        cephadm shell -- ceph orch stop mon
+        cephadm shell -- ceph orch stop mgr
       register: ceph_stop
       changed_when: false
 
